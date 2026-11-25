@@ -1,0 +1,11 @@
+Modelo: Regional jet aircraft (jato regional, sem marca de companhia)
+Arquivo: regional-jet-aircraft.glb (glTF 2.0 binário, 6,3 MB, 141.708 triângulos, 11 materiais com texturas 2K)
+Autor: Innerscene Corp (innerscene.com), "Innerscene - original model"
+Licença: domínio público, CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/)
+  Texto no próprio arquivo (asset.copyright): "Public domain: dedicated under CC0 1.0 Universal ... Free to use, modify and
+  redistribute for any purpose, with no credit required."
+Fonte: https://www.innerscene.com/tools/library/3d-parts/regional-jet-aircraft-ae1f8f3d
+Download direto (sem login): https://www.innerscene.com/api/library/regional-jet-aircraft-ae1f8f3d/download
+Baixado em 03/11/2026 para o Short do arco-íris (projetos/arco-iris). Uso no kit: IRIS.loadModel('regional-jet-aircraft.glb').
+Eixos do modelo: x = frente (nariz em +x), y = cima, z = direita (luz vermelha em -z, verde em +z); metros, ~30,4 m de comprimento.
+Crédito na descrição: não é obrigatório (CC0), mas pode constar "Modelo do avião: Innerscene (CC0)".

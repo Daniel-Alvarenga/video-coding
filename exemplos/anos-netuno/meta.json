@@ -1,0 +1,38 @@
+{
+ "mode": "long",
+ "format": "vertical",
+ "theme": "noite",
+ "geo": true,
+ "captions": false,
+ "title": "Quantos anos você tem em NETUNO?",
+ "eyebrow": "Astronomia",
+ "h1": "Quantos anos você tem em <em>Netuno</em>?",
+ "lede": "Netuno leva 164,8 anos para dar uma volta no Sol.",
+ "dl_en": "anos-netuno.mp4",
+ "dl_pt": "anos-netuno.mp4",
+ "music": {
+  "style": "misterioso",
+  "end_fade": 0.6
+ },
+ "sound": {
+  "ambient": [
+   {
+    "type": "space",
+    "from": 0,
+    "to": 9999,
+    "level": 0.018,
+    "fade": 0.4
+   }
+  ],
+  "gain": {
+   "whoosh": 0.2,
+   "stamp": 0.3
+  }
+ },
+ "voice_fx": {
+  "room": 0.01,
+  "predelay": 0.01,
+  "decay": 0.16,
+  "tone": 4500
+ }
+}

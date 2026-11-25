@@ -1,0 +1,8 @@
+Modelos 3D da NASA (NASA 3D Resources, https://github.com/nasa/NASA-3D-Resources), baixados em 03/11/2026.
+- Apollo_Lunar_Module.glb (+ .png de prévia): pasta "3D Models/Apollo Lunar Module".
+- Saturn_V.glb (+ .png): pasta "3D Models/Saturn V" (autor NASA/Michael D. Carbajal). Testado e NÃO usado no Short Apollo 11:
+  simplificado, pintura errada para a Apollo 11 (faixa azul com bandeiras) e peças fundidas (não separa estágios).
+Licença: material da NASA, sem copyright ("free and without copyright", ver as diretrizes de uso de mídia da NASA:
+https://www.nasa.gov/nasa-brand-center/images-and-media/). Uso comercial permitido; não pode sugerir endosso da NASA nem usar o logo.
+Crédito na descrição: "Modelo 3D do módulo lunar: NASA 3D Resources".
+- Apollo_Lunar_Module_sem_draco.glb: o mesmo modelo com a compressão Draco desfeita (gltf-transform, MIT) para o GLTFLoader do kit não precisar do decodificador.

@@ -1,0 +1,2 @@
+three.js r147 (MIT, ver LICENSE), baixado em 03/11/2026 de https://cdn.jsdelivr.net/npm/three@0.147.0/ (build/three.min.js e examples/js/*).
+Última versão com examples/js (scripts globais THREE.*), que o build.py injeta direto na página. Usado por engine/rocket3d.js.

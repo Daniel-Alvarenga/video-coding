@@ -1,0 +1,26 @@
+{
+ "mode": "long",
+ "format": "vertical",
+ "theme": "noite",
+ "geo": true,
+ "captions": false,
+ "title": "TODOS os planetas cabem entre a Terra e a Lua?",
+ "eyebrow": "Espaço",
+ "h1": "Todos os planetas cabem entre a <em>Terra</em> e a Lua?",
+ "lede": "Os 7 planetas empilhados em escala real no vão entre a Terra e a Lua.",
+ "dl_en": "planetas-cabem.mp4",
+ "dl_pt": "planetas-cabem.mp4",
+ "sound": {
+  "gain": {
+   "whoosh": 0.22,
+   "impact": 0.6,
+   "swoosh": 0.3,
+   "riser": 0.35,
+   "chime": 0.4,
+   "pop": 0.5,
+   "note": 0.24,
+   "sparkle": 0.03,
+   "thud": 0.1
+  }
+ }
+}

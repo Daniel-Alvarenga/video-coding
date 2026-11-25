@@ -1,0 +1,23 @@
+# instalados pelo setup.sh
+fonts/node_modules/
+models/
+# gerados pelo make.sh em cada projeto (só ficam a fonte, voice/ e video.mp4)
+exemplos/*/page.html
+exemplos/*/plan.json
+exemplos/*/sheet.jpg
+exemplos/*/_st_*.jpg
+exemplos/*/*.wav
+exemplos/*/*.events.json
+exemplos/*/log-*.txt
+exemplos/*/make.log
+exemplos/*/*.mp4
+!exemplos/*/video.mp4
+exemplos/*/quadros/
+projetos/
+__pycache__/
+*.pyc
+# segredos: nunca versionar
+.env
+*segredo*
+*client_secret*
+*chave*

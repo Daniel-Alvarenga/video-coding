@@ -1,0 +1,19 @@
+{
+ "mode": "long",
+ "format": "vertical",
+ "theme": "noite",
+ "geo": true,
+ "captions": false,
+ "title": "Qual estrela vive MAIS?",
+ "eyebrow": "Astronomia",
+ "h1": "Qual estrela <em>vive mais</em>?",
+ "lede": "A gigante ou a pequenininha: a massa decide quanto tempo uma estrela vive e como ela morre.",
+ "dl_en": "vida-estrelas.mp4",
+ "dl_pt": "vida-estrelas.mp4",
+ "voice_fx": {"room": 0.01, "predelay": 0.01, "decay": 0.16, "tone": 4500},
+ "sound": {
+  "ambient": [{"type": "space", "from": 0, "to": 9999, "level": 0.016, "fade": 0.4}],
+  "tones": {"massa": {"lo": 110, "hi": 660, "gain": 0.035, "harm": [1, 0.35, 0.12]}},
+  "gain": {"whoosh": 0.2, "stamp": 0.28, "impact": 0.25, "pop": 0.05, "click": 0.05}
+ }
+}

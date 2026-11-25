@@ -1,0 +1,205 @@
+<!doctype html><html><head><meta charset="utf-8"><title>{{TITLE}}</title><style>body{margin:0;background:#000}canvas{width:540px;height:960px}</style></head><body><canvas id="cv"></canvas><script>
+(()=>{
+
+const W=1080,H=1920,TAU=Math.PI*2;
+const C={ink:'#0a0d16',chalk:'#ece6d6',gold:'#f4b740',cyan:'#62d0ea',rose:'#ef6f95',dim:'rgba(236,230,214,.55)',faint:'rgba(236,230,214,.10)'};
+const F={display:'"Newsreader", Georgia, serif',mono:'"IBM Plex Mono", ui-monospace, monospace',sans:'"Hanken Grotesk", system-ui, sans-serif'};
+
+let LANG='pt';const L=(p,e)=>LANG==='en'?e:p;
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ease=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
+const easeOut=x=>1-Math.pow(1-clamp(x),3);
+const ramp=(t,a,b)=>clamp((t-a)/(b-a));
+const lerp=(a,b,u)=>a+(b-a)*u;
+
+function boxAdd(ctx,x0,y0,x1,y1,tag){const m=ctx.getTransform(),q=typeof sf!=='undefined'&&sf?sf:1,s=m.a/q,X=v=>m.e/q+v*s,Y=v=>m.f/q+v*s;window.__boxes.push([X(x0),Y(y0),X(x1),Y(y1),tag])}
+function txt(ctx,s,x,y,o={}){
+  ctx.save();ctx.globalAlpha*=(o.a??1);
+  ctx.font=`${o.it?'italic ':''}${o.weight||400} ${o.size||40}px ${o.font||F.sans}`;
+  ctx.fillStyle=o.color||C.chalk;ctx.textAlign=o.align||'center';ctx.textBaseline='alphabetic';
+  if('letterSpacing' in ctx)ctx.letterSpacing=(o.ls||0)+'px';
+  if(window.__boxes&&ctx.globalAlpha>.25&&String(s).trim()){const w=ctx.measureText(s).width,al=o.align||'center',sz=o.size||40,x0=al==='center'?x-w/2:al==='right'?x-w:x;boxAdd(ctx,x0,y-sz*.74,x0+w,y+sz*.2,'t:'+s)}
+  ctx.fillText(s,x,y);ctx.restore();
+}
+const fontOf=it=>`${it.it?'italic ':''}400 ${it.size}px ${it.font||F.display}`;
+function mathLine(ctx,items,cx,y,o={}){
+  ctx.save();let w=0;
+  for(const it of items){ctx.font=fontOf(it);it.w=ctx.measureText(it.s).width+(it.gap||0);w+=it.w}
+  let x=cx-w/2;
+  items.forEach((it,i)=>{
+    const r=o.reveal!=null?easeOut(clamp((o.reveal-i*.14)/.6)):1;
+    ctx.globalAlpha=(o.a??1)*r;ctx.font=fontOf(it);ctx.fillStyle=it.color||C.chalk;ctx.textAlign='left';
+    ctx.fillText(it.s,x,y+(it.dy||0)+(1-r)*24);it.x=x;x+=it.w;
+  });
+  ctx.restore();return items;
+}
+function poly(ctx,pts,n,o){
+  if(n<2)return;ctx.save();ctx.globalAlpha*=(o.a??1);
+  ctx.strokeStyle=o.color;ctx.lineWidth=o.lw;ctx.lineJoin='round';ctx.lineCap='round';
+  if(o.dash)ctx.setLineDash(o.dash);
+  if(o.glow){ctx.shadowColor=o.color;ctx.shadowBlur=o.glow}
+  ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
+  for(let i=1;i<n;i++)ctx.lineTo(pts[i][0],pts[i][1]);
+  if(o.extra)ctx.lineTo(o.extra[0],o.extra[1]);
+  if(o.close)ctx.closePath();
+  if(o.fill){ctx.fillStyle=o.fill;ctx.fill()}
+  ctx.stroke();ctx.restore();
+}
+function drawChain(ctx,J,radii,o){
+  ctx.save();const s=o.s||1;
+  ctx.strokeStyle=o.circle;ctx.lineWidth=(o.lw||1.6)/s;
+  for(let i=0;i<radii.length;i++){
+    const r=radii[i];if(r*s<0.6)continue;
+    ctx.globalAlpha=(o.circleA??.5)*(1-.75*i/(radii.length+1));
+    ctx.beginPath();ctx.arc(J[i][0],J[i][1],r,0,TAU);ctx.stroke();
+  }
+  ctx.globalAlpha=o.armA??.9;ctx.strokeStyle=o.arm;ctx.lineWidth=(o.lw||1.6)*1.4/s;
+  ctx.beginPath();J.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();
+  const tip=J[J.length-1];ctx.globalAlpha=1;ctx.fillStyle=o.tip||C.chalk;
+  ctx.beginPath();ctx.arc(tip[0],tip[1],7/s,0,TAU);ctx.fill();
+  ctx.restore();
+}
+
+
+const bgc=document.createElement('canvas');bgc.width=W;bgc.height=H;
+(()=>{const b=bgc.getContext('2d');b.fillStyle=C.ink;b.fillRect(0,0,W,H);
+  const g=b.createRadialGradient(W/2,H*.42,100,W/2,H*.42,1300);g.addColorStop(0,'#162039');g.addColorStop(1,'#06080e');
+  b.fillStyle=g;b.fillRect(0,0,W,H);b.fillStyle='rgba(236,230,214,.07)';
+  for(let x=30;x<W;x+=60)for(let y=30;y<H;y+=60){b.beginPath();b.arc(x,y,1.6,0,TAU);b.fill()}})();
+const bg=ctx=>ctx.drawImage(bgc,0,0);
+const COL={g:C.gold,c:C.cyan,d:C.dim,w:C.chalk};
+
+/* ---------- glyph layout + algebraic morphs ---------- */
+window.__ev=window.__ev||[];const __seen=new Set();
+function logEv(key,kind,val){if(window.__T==null||__seen.has(key))return;__seen.add(key);window.__ev.push([window.__T,kind,val||0])}
+/* <id|...> gives glyphs an explicit identity for matching */
+function layoutEq(ctx,str,x,y,size,align){
+  const toks=[];let i=0,color=null,hl=false,id=null,stack=[],buf='';
+  const push=(s,kind)=>{if(!s)return;toks.push({s,kind,color,hl,id})};
+  while(i<str.length){const ch=str[i];
+    if(str.startsWith('\\frac{',i)||str.startsWith('\\sqrt{',i)){push(buf,'n');buf='';const isF=str[i+1]==='f';let j=i+5;
+      const grab=()=>{let d=0,k=j;for(;k<str.length;k++){if(str[k]==='{')d++;else if(str[k]==='}'){d--;if(!d)break}}const s=str.slice(j+1,k);j=k+1;return s};
+      const a=grab(),b=isF?grab():null;toks.push({s:'',kind:isF?'frac':'sqrt',num:a,den:b,color,hl,id});i=j;continue}
+    if(ch==='{'&&str[i+1]==='{'){push(buf,'n');buf='';const j=str.indexOf('}}',i);const [op,top,bot]=str.slice(i+2,j).split('|');toks.push({s:op,kind:'op',top,bot,color,hl,id});i=j+2;continue}
+    if(ch==='('||ch===')'){push(buf,'n');buf='';push(ch,'n');i++;continue}
+    if((ch==='^'||ch==='_')&&str[i+1]==='{'){push(buf,'n');buf='';const j=str.indexOf('}',i);push(str.slice(i+2,j),ch==='^'?'sup':'sub');i=j+1;continue}
+    if(ch==='['&&str[i+2]==='|'){push(buf,'n');buf='';stack.push([color,hl,id]);const k=str[i+1];if(k==='h')hl=true;else color=COL[k];i+=3;continue}
+    if(ch==='<'){const j=str.indexOf('|',i);push(buf,'n');buf='';stack.push([color,hl,id]);id=str.slice(i+1,j);i=j+1;continue}
+    if((ch===']'||ch==='>')&&stack.length){push(buf,'n');buf='';[color,hl,id]=stack.pop();i++;continue}
+    buf+=ch;i++}
+  push(buf,'n');
+  const fontOf=(kind,fs)=>kind==='op'?`400 ${fs*1.25}px ${F.display}`:`italic 400 ${fs}px ${F.display}`;
+  const G=[];ctx.save();
+  for(const t of toks){
+    if(t.kind==='frac'||t.kind==='sqrt'){const grp={},idk=t.id?'#'+t.id:'',col=g=>{g.color=g.color||t.color;g.hl=g.hl||t.hl;return g};
+      if(t.kind==='frac'){const fs=size*.8,ax=-size*.3,Nn=layoutEq(ctx,t.num,0,0,fs,'left'),Dd=layoutEq(ctx,t.den,0,0,fs,'left'),w=Math.max(Nn.w,Dd.w)+size*.3;grp.w=w;
+        G.push({s:'',kind:'bar',fs:size,w:w-size*.16,gw:w-size*.16,grp,gx:size*.08,gy:ax,color:t.color,hl:t.hl,key:idk+'⁄bar'});
+        Nn.forEach(g=>G.push(col({...g,grp,gx:g.x+(w-Nn.w)/2,gy:g.y+ax-fs*.3})));
+        Dd.forEach(g=>G.push(col({...g,grp,gx:g.x+(w-Dd.w)/2,gy:g.y+ax+fs*.95})))}
+      else{const Rr=layoutEq(ctx,t.num,0,0,size,'left'),sw=size*.62;grp.w=sw+Rr.w+size*.14;
+        G.push({s:'',kind:'rad',fs:size,w:sw,gw:sw,grp,gx:0,gy:0,color:t.color,hl:t.hl,key:idk+'√'});
+        G.push({s:'',kind:'bar',fs:size,w:Rr.w+size*.1,gw:Rr.w+size*.1,grp,gx:sw,gy:-size*.86,color:t.color,hl:t.hl,key:idk+'√bar'});
+        Rr.forEach(g=>G.push(col({...g,grp,gx:sw+g.x,gy:g.y})))}
+      continue}
+    if(t.kind==='op'){ctx.font=fontOf('op',size);let w=ctx.measureText(t.s).width+size*.18;ctx.font=`italic 400 ${size*.4}px ${F.display}`;w=Math.max(w,ctx.measureText(t.top||'').width+8,ctx.measureText(t.bot||'').width+8);
+      G.push({s:t.s,kind:'op',top:t.top,bot:t.bot,fs:size,w,color:t.color,hl:t.hl,key:t.id?'#'+t.id+t.s:t.s});continue}
+    const fs=t.kind==='n'?size:size*.58;ctx.font=fontOf(t.kind,fs);
+    let prev=0;const chars=[...t.s];let idn=0;
+    chars.forEach((c,k)=>{const wpre=ctx.measureText(chars.slice(0,k+1).join('')).width;
+      G.push({s:c,kind:t.kind,fs,dx:prev,w:wpre-prev,color:t.color,hl:t.hl,key:(t.id?'#'+t.id+':'+(idn++)+':':'')+c,tok:t});prev=wpre});
+  }
+  ctx.restore();
+  {const st=[];G.forEach((g,i)=>{if(g.grp||g.kind!=='n')return;if(g.s==='(')st.push(i);else if(g.s===')'&&st.length){const o=st.pop();
+    if(G.slice(o,i).some(h=>h.grp)){for(const k of [o,i]){G[k].tall=1;G[k].w*=1.6}let k=i+1;while(k<G.length&&G[k].kind==='sup'&&!G[k].grp){G[k].hi=1;k++}}}})}
+  // positions
+  let cx=0;let curTok=null,tokX=0;
+  for(const g of G){if(g.grp){if(g.grp.x==null){g.grp.x=cx;cx+=g.grp.w;curTok=null}g.x=g.grp.x+g.gx;continue}
+    if(g.kind==='op'){g.x=cx;cx+=g.w;curTok=null;continue}
+    if(g.tok!==curTok){curTok=g.tok;tokX=cx}g.x=tokX+g.dx;cx=Math.max(cx,g.x+g.w)}
+  const w=cx,off=align==='left'?x:x-w/2;
+  for(const g of G){g.x+=off;g.y=g.grp?y+g.gy:y+(g.kind==='sup'?-size*(g.hi?.78:.42):g.kind==='sub'?size*.2:0);g.base=y;g.size=size}
+  G.w=w;G.x0=off;return G;
+}
+const _lay=new Map();
+function lay(ctx,str,x,y,size,align){const k=str+'|'+x+'|'+y+'|'+size+'|'+align+'|'+LANG;if(!_lay.has(k))_lay.set(k,layoutEq(ctx,str,x,y,size,align));return _lay.get(k)}
+function drawGlyph(ctx,g,x,y,fs,alpha,color,glow){
+  if(alpha<=0.003)return;
+  if(window.__boxes&&alpha>.25&&g.s!==' '){const k=fs/(g.fs||fs),w=(g.w||fs*.5)*k,top=g.kind==='bar'?y-4:y-fs*.74,bot=g.kind==='bar'?y+4:y+fs*.2;if(g.kind!=='bar'||w>4)boxAdd(ctx,x,top,x+w,bot,window.__eqTag||'eq')}
+  ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;
+  if(glow){ctx.shadowColor=color;ctx.shadowBlur=glow}
+  if(g.kind==='bar'||g.kind==='rad'){const k=fs/g.fs,s=g.fs*k,w=g.gw*k;ctx.strokeStyle=color;ctx.lineWidth=Math.max(2,s*.045);ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
+    if(g.kind==='bar'){ctx.moveTo(x,y);ctx.lineTo(x+w,y)}else{ctx.moveTo(x+w*.05,y-s*.3);ctx.lineTo(x+w*.25,y-s*.38);ctx.lineTo(x+w*.5,y+s*.18);ctx.lineTo(x+w,y-s*.86)}
+    ctx.stroke();ctx.restore();return}
+  if(g.kind==='op'){const cxo=x+g.w/2;ctx.font=`400 ${fs*1.25}px ${F.display}`;ctx.textAlign='center';ctx.fillText(g.s,cxo,y+fs*.12);
+    ctx.font=`italic 400 ${fs*.4}px ${F.display}`;
+    if(g.s==='∫'){if(g.top)ctx.fillText(g.top,cxo+fs*.3,y-fs*.9);if(g.bot)ctx.fillText(g.bot,cxo-fs*.26,y+fs*.66)}else{if(g.top)ctx.fillText(g.top,cxo,y-fs*.9);if(g.bot)ctx.fillText(g.bot,cxo,y+fs*.56)}}
+  else if(g.tall){ctx.font=`300 ${fs*1.6}px ${F.display}`;ctx.textAlign='left';ctx.fillText(g.s,x,y+fs*.2)}
+  else{ctx.font=`italic 400 ${fs}px ${F.display}`;ctx.textAlign='left';ctx.fillText(g.s,x,y)}
+  ctx.restore();
+}
+function hlRuns(G){const runs=[];let cur=null;for(const g of G){if(g.hl){const t0=g.y-(g.kind==='bar'?8:g.fs*.8),b0=g.y+(g.kind==='bar'?8:g.fs*.26);
+  const ov=g.kind==='bar'||g.kind==='rad'?0:g.fs*.14;
+  if(!cur){cur={x0:g.x,x1:g.x+g.w+ov,t:g.grp?t0:Math.min(t0,g.base-g.size*.84),b:g.grp?b0:Math.max(b0,g.base+g.size*.26)};runs.push(cur)}cur.x0=Math.min(cur.x0,g.x);cur.x1=Math.max(cur.x1,g.x+g.w+ov);cur.t=Math.min(cur.t,t0);cur.b=Math.max(cur.b,b0)}else cur=null}return runs}
+function drawHl(ctx,G,a){if(a<=0)return;ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(244,183,64,.15)';ctx.strokeStyle='rgba(244,183,64,.75)';ctx.lineWidth=2;
+  for(const r of hlRuns(G)){const x0=r.x0-8,x1=r.x1+8;ctx.beginPath();ctx.roundRect(x0,r.t-6,x1-x0,r.b-r.t+12,10);ctx.fill();ctx.stroke()}ctx.restore()}
+function lcs(A,B){const n=A.length,m=B.length,D=Array.from({length:n+1},()=>new Int16Array(m+1));
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)D[i][j]=A[i].key===B[j].key?D[i+1][j+1]+1:Math.max(D[i+1][j],D[i][j+1]);
+  const ma=new Int16Array(n).fill(-1),mb=new Int16Array(m).fill(-1);let i=0,j=0;
+  while(i<n&&j<m){if(A[i].key===B[j].key){ma[i]=j;mb[j]=i;i++;j++}else if(D[i+1][j]>=D[i][j+1])i++;else j++}
+  return {ma,mb};
+}
+const _lcs=new Map();
+/* static glyphs appearing with a quick left-to-right cascade */
+function eqIn(ctx,str,x,y,size,el,o={}){
+  window.__eqTag='e:'+(o.key||str);const G=lay(ctx,str,x,y,size,o.align);const a=o.a??1,n=G.length,span=Math.min(.7,n*.03);
+  if(el<1.2&&o.key)logEv(o.key,'in',n);
+  G.forEach((g,i)=>{const v=easeOut(clamp((el-i/n*span)/.28));drawGlyph(ctx,g,g.x,g.y+(1-v)*size*.25,g.fs,a*v,g.color||o.color||C.chalk,0)});
+  drawHl(ctx,G,a*clamp((el-span-.2)/.3)*(o.hl??1));return G;
+}
+/* a derivation: steps=[{at,s,x?,y?,size?}], morphing glyphs between consecutive steps */
+function deriv(ctx,steps,t,o={}){
+  window.__eqTag='d:'+(o.key||steps[0].s);const D=o.dur??1.0,a=o.a??1;
+  let k=-1;for(let i=0;i<steps.length;i++)if(t>=steps[i].at)k=i;if(k<0)return null;
+  const S=i=>{const s=steps[i];return lay(ctx,s.s,s.x??o.x,s.y??o.y,s.size??o.size,s.align??o.align)};
+  const B=S(k);const p=ease(clamp((t-steps[k].at)/D));
+  if(k===0){if(o.key)logEv(o.key+':0','in',B.length);
+    const el=t-steps[0].at,n=B.length,span=Math.min(.7,n*.03);
+    B.forEach((g,i)=>{const v=easeOut(clamp((el-i/n*span)/.28));drawGlyph(ctx,g,g.x,g.y+(1-v)*g.size*.25,g.fs,a*v,g.color||C.chalk,0)});
+    drawHl(ctx,B,a*clamp((el-span-.2)/.3));return B}
+  const A=S(k-1);
+  if(p>=1){B.forEach(g=>drawGlyph(ctx,g,g.x,g.y,g.fs,a,g.color||C.chalk,0));drawHl(ctx,B,a*clamp((t-steps[k].at-D)/.3));return B}
+  if(o.key)logEv(o.key+':'+k,'morph',0);
+  const ck=steps[k-1].s+'⟶'+steps[k].s+(steps[k-1].x??'')+(steps[k].x??'');if(!_lcs.has(ck))_lcs.set(ck,lcs(A,B));const {ma,mb}=_lcs.get(ck);
+  drawHl(ctx,A,a*(1-clamp(p*3)));
+  A.forEach((g,i)=>{if(ma[i]>=0)return;const f=clamp(p/.45);drawGlyph(ctx,g,g.x,g.y-f*g.size*.35,g.fs*(1-.25*f),a*(1-f),g.color||C.chalk,0)});
+  let nu=0;B.forEach(g=>{if(mb[B.indexOf(g)]<0)nu++});let ni=0;
+  B.forEach((g,j)=>{const i=mb[j];
+    if(i>=0){const s=A[i];const dist=Math.hypot(g.x-s.x,g.y-s.y);const arc=Math.sin(Math.PI*p)*Math.min(dist*.18,s.size*.6);
+      const col=p<.5?(s.color||C.chalk):(g.color||C.chalk);const moving=dist>2;
+      drawGlyph(ctx,g,lerp(s.x,g.x,p),lerp(s.y,g.y,p)-arc,lerp(s.fs,g.fs,p),a,col,moving?Math.sin(Math.PI*p)*14:0)}
+    else{const d=(ni++/Math.max(1,nu))*.25;const f=easeOut(clamp((p-.35-d)/.45));drawGlyph(ctx,g,g.x,g.y+(1-f)*g.size*.35,g.fs,a*f,g.color||C.chalk,f<1?10:0)}});
+  return B;
+}
+function popLog(key,i,every=1){if(i%every===0)logEv(key+':'+i,'pop',i)}
+
+/*__SCENES__*/
+let acc=0;scenes.forEach(s=>{s.start=acc;acc+=s.dur});const TOTAL=acc;
+function capAt(T){if(typeof CAPTIONS_ENABLED!=='undefined'&&!CAPTIONS_ENABLED)return null;const i=Math.max(0,scenes.findIndex((s,k)=>T>=s.start&&(k===scenes.length-1||T<scenes[k+1].start)));const lt=T-scenes[i].start;
+  const caps=PLAN.caps[LANG][i];let c=null;for(const [a,s] of caps)if(lt>=a)c=[a,s];if(!c&&i>0){const p=PLAN.caps[LANG][i-1];if(p.length&&lt<.4)c=[-1,p.at(-1)[1]]}return c&&{text:c[1],since:lt-c[0]}}
+function burnCap(ctx,T){const c=capAt(T);if(!c)return;const a=easeOut(c.since/.25);ctx.save();ctx.globalAlpha=a;ctx.font=`600 52px ${F.sans}`;
+  const words=c.text.split(' '),lines=[];let cur='';for(const w of words){const tr=cur?cur+' '+w:w;if(ctx.measureText(tr).width>880&&cur){lines.push(cur);cur=w}else cur=tr}lines.push(cur);
+  const lh=68,bh=lines.length*lh+34,by=1390;ctx.fillStyle='rgba(10,13,22,.78)';ctx.beginPath();ctx.roundRect(CX-480,by,960,bh,18);ctx.fill();
+  ctx.textAlign='center';lines.forEach((l,k)=>{const parts=l.split(/(\d[\d.,/×…ⁿ]*|…)/);ctx.fillStyle=C.chalk;ctx.fillText(l,CX,by+lh*(k+1)-6)});ctx.restore()}
+function render(ctx,T){
+  let i=0;while(i<scenes.length-1&&T>=scenes[i+1].start)i++;const lt=T-scenes[i].start;
+  if(i>0&&lt<.35){const p=ease(lt/.35);ctx.save();ctx.translate(0,-H*p);scenes[i-1].draw(ctx,scenes[i-1].dur);ctx.restore();ctx.save();ctx.translate(0,H*(1-p));scenes[i].draw(ctx,lt);ctx.restore();logEv('cut'+i,'morph',0)}
+  else scenes[i].draw(ctx,lt);
+  burnCap(ctx,T);
+  // progress bar on top
+  ctx.save();ctx.fillStyle='rgba(236,230,214,.12)';ctx.fillRect(80,120,W-160,6);ctx.fillStyle=C.gold;ctx.fillRect(80,120,(W-160)*T/TOTAL,6);ctx.restore();
+}
+const cv=document.getElementById('cv');cv.width=W;cv.height=H;const ctx=cv.getContext('2d');
+window.__film={starts:scenes.map(s=>s.start),TOTAL,setLang(l){LANG=l},frame(T){window.__T=T;ctx.setTransform(1,0,0,1,0,0);render(ctx,T)}};
+
+})();
+</script></body></html>

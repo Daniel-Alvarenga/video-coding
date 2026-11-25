@@ -1,0 +1,6 @@
+estrada/asphalt_02_*_2k.jpg (+ asfalto_*.jpg reduzidos): "Asphalt 02", Poly Haven (https://polyhaven.com/a/asphalt_02), CC0 1.0. Baixado em 04/11/2026.
+ceu/kloofendal_43d_clear_puresky.jpg (+ ceu_web.jpg): "Kloofendal 43d Clear (Pure Sky)", Poly Haven (https://polyhaven.com/a/kloofendal_43d_clear_puresky), versão JPG tonemapped, CC0 1.0. Baixado em 04/11/2026.
+carro/CarConcept.glb: "Car Concept", Khronos glTF-Sample-Assets (https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept),
+  © 2024 Darmstadt Graphics Group GmbH e Eric Chadwick, CC BY 4.0 (adaptado de modelo de domínio público de Unity Fan). Os logos da Khronos no modelo
+  têm aviso próprio: não aparecem nos vídeos. Crédito na descrição: "Modelo do carro: Car Concept (Darmstadt Graphics Group e Eric Chadwick, CC BY 4.0)".
+  Baixado em 04/11/2026.
